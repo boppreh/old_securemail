@@ -32,9 +32,14 @@ class TestClient(unittest.TestCase):
 
     def test_self_connection(self):
         c = self.make_client()
-        message = 'test_message'
-        c.send(c.address, message)
-        self.assertTrue(c.receive() == message)
+        c.send(c.address, 'message')
+        self.assertEqual(c.receive(), 'message')
+
+    def test_connection(self):
+        c1 = self.make_client('alice')
+        c2 = self.make_client('bob')
+        c1.send(c2.address, 'message')
+        self.assertEqual(c2.receive(), 'message')
 
 if __name__ == '__main__':
     unittest.main()
