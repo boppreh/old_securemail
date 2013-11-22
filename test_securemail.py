@@ -1,7 +1,20 @@
 import unittest
-from securemail import Client, InternalNetwork
+from securemail import Client, Key, Network
 
-class MockKey(object):
+class InternalNetwork(Network):
+    """
+    Mock network that sends the message directly through Python.
+    """
+    def __init__(self):
+        self.entities = {}
+
+    def register(self, address, entity):
+        self.entities[address] = entity
+
+    def send(self, address, message):
+        self.entities[address].receive_raw(message)
+
+class MockKey(Key):
     def __init__(self, char, is_private):
         self.char = char
         self.is_private = is_private

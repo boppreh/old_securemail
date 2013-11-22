@@ -1,15 +1,41 @@
-class InternalNetwork(object):
-    def __init__(self):
-        self.entities = {}
+class Key(object):
+    """
+    Interface for encryption keys, symmetric or not.
+    """
+    def encrypt(self, message):
+        raise NotImplementedError()
 
-    def register(self, name, entity):
-        self.entities[name] = entity
+    def decrypt(self, message):
+        raise NotImplementedError()
 
-    def send(self, name, message):
-        self.entities[name].receive_raw(message)
+    def serialize(self):
+        raise NotImplementedError()
+
+    def load(self, string):
+        raise NotImplementedError()
+    
+class Network(object):
+    """
+    Interface for Network objects. These objects are used to send and receive
+    messages from an arbitrary network.
+    """
+    def register(self, address, entity):
+        raise NotImplementedError()
+
+    def send(self, address, message):
+        raise NotImplementedError()
 
 class Client(object):
+    """
+    Secure mail client, storing its own address and key pair internally.
+    Messages are sent through the given Network object.
+    """
     def __init__(self, address, privkey, pubkey, network):
+        """
+        Creates a new Client instance. `address` is the global address of this
+        instance, `privkey` and `pubkey` are its keypair, and `network` is used
+        to send and receive messages.
+        """
         self.address = address
         self.privkey = privkey
         self.pubkey = pubkey
@@ -20,11 +46,17 @@ class Client(object):
         self.network.register(address, self)
 
     def _get_address_pubkey(self, address):
+        """
+        Returns the associated public key of a given address.
+        """
         if not address in self.pubkey_cache:
             self.network.send(address, self.address + '\n' + self.pubkey.serialize() + '\nsend me your pubkey')
         return self.pubkey_cache[address]
 
     def receive_raw(self, message):
+        """
+        Signals this client that it has received a message.
+        """
         sender, pubkey_str, text = message.split('\n', 2)
         pubkey = self.pubkey.load(pubkey_str)
         self.pubkey_cache[sender] = pubkey
@@ -35,9 +67,15 @@ class Client(object):
             self.message_buffer.append(pubkey.decrypt(self.privkey.decrypt(text)))
 
     def receive(self):
+        """
+        Returns a message from the message buffer or wait for one to arrive.
+        """
         return self.message_buffer.pop(0)
 
     def send(self, address, message):
+        """
+        Sends a secure message to a given address.
+        """
         pubkey = self._get_address_pubkey(address)
         ciphertext = pubkey.encrypt(self.privkey.encrypt(message))
         self.network.send(address, self.address + '\n' + self.pubkey.serialize() + '\n' + ciphertext)
