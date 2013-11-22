@@ -63,7 +63,7 @@ class Client(object):
         send_mail(address, self.address + '\n' + self.pubkey.serialize() + '\n' + ciphertext)
 
 if __name__ == '__main__':
-    #root = TrustedServer(MockKey('r', True), MockKey('r', False))
+    root = TrustedServer(MockKey('r', True), MockKey('r', False))
     
     alice = Client('alice', MockKey('a', True), MockKey('a', False), root)
     bob = Client('bob', MockKey('b', True), MockKey('b', False), root)
