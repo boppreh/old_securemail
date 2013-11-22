@@ -3,11 +3,9 @@ class InternalNetwork(object):
         self.entities = {}
 
     def register(self, name, entity):
-        print('Registered {}'.format(name))
         self.entities[name] = entity
 
     def send(self, name, message):
-        print('to: {}. "{}"\n'.format(name, message))
         self.entities[name].receive_raw(message)
 
 class Client(object):
